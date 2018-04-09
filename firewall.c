@@ -50,8 +50,8 @@ typedef struct Pipes_S
 typedef struct FWSpec_S
 {
    char * config_file;           ///< name of the firewall config file
-   char * in_file;               ///< name of input pipe 
-   char * out_file;              ///< name of output pipe 
+   char * in_file;               ///< name of input pipe
+   char * out_file;              ///< name of output pipe
    IpPktFilter filter;           ///< pointer to the filter configuration
    Pipes_T pipes;                ///< pipes is the stream data storage.
 } FWSpec_T;
@@ -94,20 +94,20 @@ static pthread_key_t tsd_key;
 /// The thread instance calls pthread_setspecific(key, (void *) value)
 /// where value is the dynamic thread specific data.
 /// When the thread exits, infrastructure calls the destroy function to
-/// dispose of the TSD. 
+/// dispose of the TSD.
 /// @param tsd_data pointer to thread specific data allocations to free/close
 void tsd_destroy( void * tsd_data) {
 
    FWSpec_T *fw_spec = (FWSpec_T *)tsd_data;
    printf( "fw: thread destructor is deleting filter data.\n"); fflush( stdout);
-   if ( fw_spec->filter ) 
+   if ( fw_spec->filter )
    {
       destroy_filter( fw_spec->filter);
-      fw_spec->filter = NULL; 
+      fw_spec->filter = NULL;
    }
    printf( "fw: thread destructor is closing pipes.\n"); fflush( stdout);
    close_pipes( &fw_spec->pipes);
-} 
+}
 
 /// signal handler passes signal information to the subordinate thread so
 /// that the thread can gracefully terminate and clean up.
@@ -125,15 +125,15 @@ static void sig_handler( int signum)
 /// init_sig_handlers initializes sigaction and installs signal handlers.
 static void init_sig_handlers() {
 
-    struct sigaction signal_action;            // define sig handler table 
+    struct sigaction signal_action;            // define sig handler table
 
-    signal_action.sa_flags = 0;               // linux lacks SA_RESTART 
-    sigemptyset( &signal_action.sa_mask );    // no masked interrupts 
+    signal_action.sa_flags = 0;               // linux lacks SA_RESTART
+    sigemptyset( &signal_action.sa_mask );    // no masked interrupts
     signal_action.sa_handler = sig_handler;   // insert handler function
 
     sigaction( SIGHUP, &signal_action, NULL ); // for HangUP from fwSim
-    return; 
-} // init_sig_handlers 
+    return;
+} // init_sig_handlers
 
 
 /// Open the input and output streams used for reading and writing packets.
@@ -200,12 +200,11 @@ static void * filter_thread(void* args)
 
 
    // end of thread is never reached when there is a cancellation.
-   printf( "fw: thread is deleting filter data.\n"); fflush( stdout);
-   tsd_destroy( (void *)spec_p);
+   puts("fw: thread is deleting filter data.");
+   tsd_destroy((void *)spec_p);
    printf("fw: thread returning. status: %d\n", status);
-   fflush( stdout);
 
-   pthread_exit( &status);
+   pthread_exit(&status);
 }
 
 
@@ -242,6 +241,7 @@ int main(int argc, char* argv[])
    init_sig_handlers();
 
    //TODO: student implements main()
+   
 
 
    printf( "fw: main is joining the thread.\n"); fflush( stdout);

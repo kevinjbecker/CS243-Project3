@@ -35,7 +35,7 @@ typedef struct FilterConfig_S
 } FilterConfig;
 
 
-/// Parses the remainder of the string last operated on by strtok 
+/// Parses the remainder of the string last operated on by strtok
 /// and converts each octet of the ASCII string IP address to an
 /// unsigned integer value.
 /// @param ipAddr The destination into which to store the octets
@@ -62,9 +62,13 @@ static void parse_remainder_of_string_for_ip(unsigned int* ipAddr)
 /// @return True if the IP address is to be blocked
 static bool block_ip_address(FilterConfig* fltCfg, unsigned int addr)
 {
-
-//TODO: student implements block_ip_address()
-
+   for(unsigned int i = 0; i < fltCfg->numBlockedIpAddresses; ++i)
+   {
+      // if the IP Address is set to be blocked, we return tru to alert that
+      if(fltCfg->blockedIpAddresses[i] = addr)
+         return true;
+   }
+   // if we get here we're okay we can allow it through
    return false;
 }
 
@@ -75,9 +79,11 @@ static bool block_ip_address(FilterConfig* fltCfg, unsigned int addr)
 /// @return True if the TCP port is to be blocked
 static bool block_inbound_tcp_port(FilterConfig* fltCfg, unsigned int port)
 {
-
-//TODO: student implements block_inbound_tcp_port()
-
+   for(unsigned int i = 0; i < fltCfg->numBlockedInboundTcpPorts; ++i)
+   {
+      if(fltCfg->blockedInboundTcpPorts[i] == port)
+         return true;
+   }
    return false;
 }
 
@@ -92,10 +98,10 @@ static bool block_inbound_tcp_port(FilterConfig* fltCfg, unsigned int port)
 /// @param dstIpAddr The destination IP address of a packet
 static bool packet_is_inbound(FilterConfig* fltCfg, unsigned int srcIpAddr, unsigned int dstIpAddr)
 {
-
-//TODO: student implements packet_is_inbound()
-
-   return false;
+//   unsigned int localIpAddr;    ///< the local IP address
+//   unsigned int localMask;      ///< the address mask
+// TODO: continue this shit because it's confusing
+   return (fltCfg->localIpAddr == dstIpAddr)
 }
 
 
@@ -130,12 +136,38 @@ static void add_blocked_inbound_tcp_port(FilterConfig* fltCfg, unsigned int port
 /// @return A pointer to the new filter
 IpPktFilter create_filter(void)
 {
+/*
+typedef struct FilterConfig_S
+{
+   unsigned int localIpAddr;    ///< the local IP address
+   unsigned int localMask;      ///< the address mask
+   bool blockInboundEchoReq;    ///< where to block inbound echo
+   unsigned int numBlockedInboundTcpPorts;   ///< count of blocked ports
+   unsigned int* blockedInboundTcpPorts;     ///< array of blocked ports
+   unsigned int numBlockedIpAddresses;       ///< count of blocked addresses
+   unsigned int* blockedIpAddresses;         ///< array of blocked addresses
+} FilterConfig;
+*/
    FilterConfig* filter = NULL;
+   // allocates enough space for filter
+   filter = malloc(sizeof(FilterConfig));
+   // checks to make sure malloc was successful
+   if(filter == NULL)
+   {
+      perror("Error creating filter");
+      return NULL;
+   }
+   // if we get here malloc was successful; we can set defaults
+   filter->localIpAddr = 0;
+   filter->localMask = 0;
+   filter->blockInboundEchoReq = false;
+   filter->numBlockedInboundTcpPorts = 0;
+   filter->blockedInboundTcpPorts = NULL;
+   filter->numBlockedIpAddresses = 0;
+   filter->blockedIpAddresses = NULL;
 
-//TODO: student implements create_filter()
-
-
-   return (IpPktFilter*)filter; 
+   // return our newly created filter
+   return (IpPktFilter*)filter;
 }
 
 
@@ -146,14 +178,19 @@ void destroy_filter(IpPktFilter filter)
 {
    FilterConfig* fltCfg = filter;
 
-//TODO: student implements destroy_filter()
+   // frees our arrays if they need to be
+   if(fltCfg->blockedInboundTcpPorts != NULL)
+      free(fltCfg->blockedInboundTcpPorts);
+   if(fltCfg->blockedIpAddresses != NULL)
+      free(fltCfg->blockedIpAddresses);
 
+   // we've now free'd everything that needs to be, we can now free filter
    free(filter);
 }
 
 
 /// Configures a filter instance using the specified configuration file.
-/// Reads the file line by line and uses strtok, strcmp, and sscanf to 
+/// Reads the file line by line and uses strtok, strcmp, and sscanf to
 /// parse each line.  After each line is successfully parsed the result
 /// is stored in the filter.  Blank lines are skipped.  When the end of
 /// the file is encountered, the file is closed and the function returns.
@@ -171,7 +208,7 @@ bool configure_filter(IpPktFilter filter, char* filename)
 
 //TODO: student implements configure_filter()
 
-   pFile = fopen(filename, "r"); 
+   pFile = fopen(filename, "r");
    if(pFile == NULL)
    {
       printf("ERROR: invalid config file\n");
