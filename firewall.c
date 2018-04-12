@@ -3,6 +3,7 @@
 /// and writes allowed packets to an output named pipe.
 /// Author: Chris Dickens (RIT CS)
 /// Author: Ben K Steele (RIT CS)
+/// Author: kjb2503 : Kevin Becker (RIT Student)
 ///
 /// Distribution of this file is limited
 /// to Rochester Institute of Technology faculty, students and graders
@@ -19,12 +20,12 @@
 #include <ctype.h>
 #include <errno.h>
 #include <pthread.h>
-#include <signal.h>     /* interrupt signal stuff is from here */
+#include <signal.h>      /* interrupt signal stuff is from here */
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
-#include <unistd.h>     /* read library call comes from here */
-
+#include <unistd.h>      /* read library call comes from here */
 #include "filter.h"
 
 /// maximum packet length (ipv4)
@@ -33,47 +34,63 @@
 /// Type used to control the mode of the firewall
 typedef enum FilterMode_E
 {
-   MODE_BLOCK_ALL,
-   MODE_ALLOW_ALL,
-   MODE_FILTER
+    MODE_BLOCK_ALL,
+    MODE_ALLOW_ALL,
+    MODE_FILTER
 } FilterMode;
 
 
 /// Pipes_S structure maintains the stream pointers.
 typedef struct Pipes_S
 {
-   FILE * in_pipe;               ///< input pipe stream
-   FILE * out_pipe;              ///< output pipe stream
+    FILE * in_pipe;                  ///< input pipe stream
+    FILE * out_pipe;                 ///< output pipe stream
 } Pipes_T;
 
 /// FWSpec_S structure holds firewall configuration, filter and I/O.
 typedef struct FWSpec_S
 {
-   char * config_file;           ///< name of the firewall config file
-   char * in_file;               ///< name of input pipe
-   char * out_file;              ///< name of output pipe
-   IpPktFilter filter;           ///< pointer to the filter configuration
-   Pipes_T pipes;                ///< pipes is the stream data storage.
+    char * config_file;              ///< name of the firewall config file
+    char * in_file;                  ///< name of input pipe
+    char * out_file;                 ///< name of output pipe
+    IpPktFilter filter;              ///< pointer to the filter configuration
+    Pipes_T pipes;                   ///< pipes is the stream data storage.
 } FWSpec_T;
 
 /// fw_spec is the specification data storage for the firewall.
 static FWSpec_T fw_spec;
 
+
 /// close the streams. Call this once at the end of a simulation.
 /// @param pipetab pointer to the I/O streams
 void close_pipes( Pipes_T *pipetab ) {
 
-   if(pipetab->in_pipe != NULL)
-   {
-      fclose(pipetab->in_pipe);
-      pipetab->in_pipe = NULL;
-   }
+    if(pipetab->in_pipe != NULL)
+    {
+        fclose(pipetab->in_pipe);
+        pipetab->in_pipe = NULL;
+    }
 
-   if(pipetab->out_pipe != NULL)
-   {
-      fclose(pipetab->out_pipe);
-      pipetab->out_pipe = NULL;
-   }
+    if(pipetab->out_pipe != NULL)
+    {
+        fclose(pipetab->out_pipe);
+        pipetab->out_pipe = NULL;
+    }
+}
+
+/// destroys the spec
+static void destroy_spec(FWSpec_T spec_p)
+{
+    // closes the pipes, frees the spec and exits
+    close_pipes(&spec_p->pipes);
+    // frees the data members of spec_p
+    free(spec_p->config_file);
+    free(spec_p->in_file);
+    free(spec_p->out_file);
+    // destroys the filter
+    destroy_filter(spec_p->filter);
+    // finally we free the spec before exiting
+    free(spec_p);
 }
 
 /// MODE controls the mode of the firewall. main writes it and filter reads it.
@@ -96,42 +113,43 @@ static pthread_key_t tsd_key;
 /// When the thread exits, infrastructure calls the destroy function to
 /// dispose of the TSD.
 /// @param tsd_data pointer to thread specific data allocations to free/close
-void tsd_destroy( void * tsd_data) {
+void tsd_destroy(void * tsd_data) {
 
-   FWSpec_T *fw_spec = (FWSpec_T *)tsd_data;
-   printf( "fw: thread destructor is deleting filter data.\n"); fflush( stdout);
-   if ( fw_spec->filter )
-   {
-      destroy_filter( fw_spec->filter);
-      fw_spec->filter = NULL;
-   }
-   printf( "fw: thread destructor is closing pipes.\n"); fflush( stdout);
-   close_pipes( &fw_spec->pipes);
+    FWSpec_T *fw_spec = (FWSpec_T *)tsd_data;
+    puts("fw: thread destructor is deleting filter data.");
+    if (fw_spec->filter)
+    {
+        destroy_filter(fw_spec->filter);
+        fw_spec->filter = NULL;
+    }
+    puts("fw: thread destructor is closing pipes.\n");
+    close_pipes(&fw_spec->pipes);
 }
 
 /// signal handler passes signal information to the subordinate thread so
 /// that the thread can gracefully terminate and clean up.
 /// @param signum signal that was received by the main thread.
-static void sig_handler( int signum)
+static void sig_handler(int signum)
 {
-    if(signum == SIGHUP) {
+    if (signum == SIGHUP) {
         NOT_CANCELLED = 0;
-        printf("\nfw: received Hangup request. Cancelling...\n");
-        fflush( stdout);
-        pthread_cancel(tid_filter);  // cancel on signal to hangup
+        puts("\nfw: received Hangup request. Cancelling...");
+        pthread_cancel(tid_filter);                // cancel on signal to hangup
     }
 }
 
 /// init_sig_handlers initializes sigaction and installs signal handlers.
-static void init_sig_handlers() {
+static void init_sig_handlers()
+{
 
-    struct sigaction signal_action;            // define sig handler table
+    struct sigaction signal_action;               // define sig handler table
 
-    signal_action.sa_flags = 0;               // linux lacks SA_RESTART
-    sigemptyset( &signal_action.sa_mask );    // no masked interrupts
-    signal_action.sa_handler = sig_handler;   // insert handler function
+    signal_action.sa_flags = 0;                   // linux lacks SA_RESTART
+    sigemptyset(&signal_action.sa_mask);          // no masked interrupts
+    signal_action.sa_handler = sig_handler;       // insert handler function
 
-    sigaction( SIGHUP, &signal_action, NULL ); // for HangUP from fwSim
+    sigaction(SIGHUP, &signal_action, NULL);      // for HangUP from fwSim
+    // can we delete this?
     return;
 } // init_sig_handlers
 
@@ -141,22 +159,23 @@ static void init_sig_handlers() {
 /// @return true if successful
 static bool open_pipes( FWSpec_T * spec_ptr)
 {
-   spec_ptr->pipes.in_pipe = fopen( spec_ptr->in_file, "rb");
-   if(spec_ptr->pipes.in_pipe == NULL)
-   {
-      printf( "fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
-      return false;
-   }
+    spec_ptr->pipes.in_pipe = fopen( spec_ptr->in_file, "rb");
+    if(spec_ptr->pipes.in_pipe == NULL)
+    {
+        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
+        return false;
+    }
 
-   spec_ptr->pipes.out_pipe = fopen( spec_ptr->out_file, "wb");
-   if(spec_ptr->pipes.out_pipe == NULL)
-   {
-      printf( "fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
-      return false;
-   }
+    spec_ptr->pipes.out_pipe = fopen(spec_ptr->out_file, "wb");
+    if(spec_ptr->pipes.out_pipe == NULL)
+    {
+        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
+        return false;
+    }
 
-   return true;
+    return true;
 }
+
 
 /// Read an entire IP packet from the input pipe
 /// @param in_pipe the binary input file stream
@@ -165,14 +184,15 @@ static bool open_pipes( FWSpec_T * spec_ptr)
 /// @return length of the packet or -1 for error
 static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen )
 {
-   int numRead = 0;
-   int numBytes = -1;
+    int numRead = 0;
+    int numBytes = -1;
+    // reads in the number of bytes we should read in
+    fread(&numBytes, sizeof(int), 1, in_pipe);
+    int len_read = -1; // assume error
 
-   int len_read = -1; // assume error
+    //TODO: student implements filter_thread()
 
-   //TODO: student implements filter_thread()
-
-   return len_read;
+    return len_read;
 }
 
 
@@ -186,36 +206,36 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen )
 
 static void * filter_thread(void* args)
 {
-   unsigned char pktBuf[MAX_PKT_LENGTH];
-   bool success;
-   int length;
+    unsigned char pktBuf[MAX_PKT_LENGTH];
+    bool success;
+    int length;
 
-   static int status = EXIT_FAILURE; // static for return persistence
+    static int status = EXIT_FAILURE; // static for return persistence
 
-   status = EXIT_FAILURE; // reset
+    status = EXIT_FAILURE; // reset
 
-   FWSpec_T * spec_p = NULL;
+    FWSpec_T * spec_p = (FWSpec_T *) args;
 
-   //TODO: student implements filter_thread()
+    //TODO the stuff which is good
 
 
-   // end of thread is never reached when there is a cancellation.
-   puts("fw: thread is deleting filter data.");
-   tsd_destroy((void *)spec_p);
-   printf("fw: thread returning. status: %d\n", status);
+    // end of thread is never reached when there is a cancellation.
+    puts("fw: thread is deleting filter data.");
+    tsd_destroy((void *)spec_p);
+    printf("fw: thread returning. status: %d\n", status);
 
-   pthread_exit(&status);
+    pthread_exit(&status);
 }
 
 
 /// Displays a prompt to stdout and menu of commands that a user can choose
 static void display_menu(void)
 {
-   printf("\n\n1. Block All\n");
-   printf("2. Allow All\n");
-   printf("3. Filter\n");
-   printf("0. Exit\n");
-   printf("> ");
+    puts("\n\n1. Block All");
+    puts("2. Allow All");
+    puts("3. Filter");
+    puts("0. Exit");
+    printf("> ");
 }
 
 /// The firewall main function creates a filter and launches filtering thread.
@@ -228,38 +248,54 @@ static void display_menu(void)
 /// @return EXIT_SUCCESS or EXIT_FAILURE
 int main(int argc, char* argv[])
 {
-   int command;
-   bool done = false;
+    int command;
+    bool done = false;
 
-   // print usage message if no arguments
-   if(argc < 2)
-   {
-      fprintf(stderr, "usage: %s configFileName\n", argv[0]);
-      return EXIT_FAILURE;
-   }
+    // print usage message if no arguments
+    if(argc < 2)
+    {
+        fprintf(stderr, "usage: %s configFileName\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
-   init_sig_handlers();
+    init_sig_handlers();
 
-   //TODO: student implements main()
-   
+    //TODO: student implements main()
+    // allocates our FWSpec
+    FWSpec_T * spec_p = malloc(sizeof(FWSpec_T));
+    // copies our config file
+    spec_p->config_file = malloc(strlen(argv[1]) + 1);
+    strcpy(spec_p->config_file, argv[1]);
+    // creats our in_file string
+    spec_p->in_file = malloc(strlen("ToFirewall") + 1);
+    strcpy(spec_p->in_file, "ToFirewall");
+    // creates our out_file string
+    spec_p->out_file = malloc(strlen("FromFirewall") + 1);
+    strcpy(spec_p->out_file, "FromFirewall");
+    // creates our filter
+    spec_p->filter = create_filter();
+    // configures our filter
+    configure_filter(spec_p->filter, spec_p->config_file);
+
+    // attempts to open the pipes, stops if fails
+    if(!open_pipes(spec_p))
+    {
+        // clears our spec before exiting
+        destroy_spec(spec_p);
+        return EXIT_FAILURE;
+    }
 
 
-   printf( "fw: main is joining the thread.\n"); fflush( stdout);
+    puts( "fw: main is joining the thread.");
 
-   // wait for the filter thread to terminate
-   void * retval = NULL;
-   int joinResult = pthread_join(tid_filter, &retval);
-   if( joinResult != 0)
-   {
-      printf( "fw: main Error: unexpected joinResult: %d\n", joinResult);
-      fflush( stdout);
-   }
-   if ( (void*)retval == PTHREAD_CANCELED )
-   {
-      printf( "fw: main confirmed that the thread was canceled.\n");
-   }
+    // wait for the filter thread to terminate
+    void * retval = NULL;
+    int joinResult = pthread_join(tid_filter, &retval);
+    if(joinResult != 0)
+        printf("fw: main Error: unexpected joinResult: %d\n", joinResult);
+    if ((void*)retval == PTHREAD_CANCELED)
+        puts("fw: main confirmed that the thread was canceled.");
 
-   printf( "fw: main returning.\n"); fflush( stdout);
-   return EXIT_SUCCESS;
+    puts("fw: main returning.");
+    return EXIT_SUCCESS;
 }
-
