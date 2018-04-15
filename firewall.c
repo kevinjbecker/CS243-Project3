@@ -192,7 +192,8 @@ static bool create_spec(FWSpec_T *spec_p, char * config_file)
     // creates our filter
     spec_p->filter = create_filter();
     // configures our filter
-    configure_filter(spec_p->filter, spec_p->config_file);
+    if(!configure_filter(spec_p->filter, spec_p->config_file))
+        return false;
 
 
     // attempts to open the pipes
@@ -258,12 +259,13 @@ static void init_sig_handlers()
 /// @return length of the packet or -1 for error
 static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 {
+    puts("ay");
     //int numRead = 0;
     int numBytes = -1;
     // reads in the number of bytes we should read in
     fread(&numBytes, sizeof(int), 1, in_pipe);
-
     int len_read = -1; // assume error
+    // reads in the number of bytes specified in numBytes
     len_read = fread(buf, sizeof(unsigned char), numBytes, in_pipe);
 
     return len_read;
@@ -290,12 +292,10 @@ static void * filter_thread(void* args)
     FWSpec_T * spec_p = (FWSpec_T *) args;
 
     while(NOT_CANCELLED &&
-          (read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
+          (length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
     {
         puts("fw: read a packet");
-        // determine if packet should be filtered
-        // if it's good write it to FromFirewall
-        // repeat
+        fwrite(pktBuf, length, 1, spec_p->pipes.out_pipe);
     }
 
     // end of thread is never reached when there is a cancellation.
@@ -355,7 +355,9 @@ int main(int argc, char* argv[])
     // starts the pthread
     pthread_create(&tid_filter, NULL, filter_thread, (void *)spec_p);
 
+    // thread is started, display the menu
     display_menu();
+    // keeps looping until the user says it needs to stop
     while(!done)
     {
         scanf("%d", &command);

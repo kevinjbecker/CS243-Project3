@@ -239,19 +239,21 @@ bool configure_filter(IpPktFilter filter, char* filename)
     pFile = fopen(filename, "r");
     if(pFile == NULL)
     {
-        perror("Error opening configuration file");
+        perror("Error opening configuration file\n");
         return false;
     }
 
     // keeps going until we're at the end of file
     while(!feof(pFile))
     {
+        fgets(buf, MAX_LINE_LEN, pFile);
+        /*
         if(fgets(buf, MAX_LINE_LEN, pFile) == NULL)
         {
-            fputs("Error, reading configuration file failed", stderr);
+            fputs("Error, reading configuration file failed\n", stderr);
             break;
             // if we hit an error we need to break
-        }
+        }*/
 
         // only process if not an empty line
         if(buf[0] != '\n')
@@ -270,18 +272,32 @@ bool configure_filter(IpPktFilter filter, char* filename)
                 fltCfg->localMask = extractLocalMask();
                 // configuratio is now valid
                 validConfig = true;
-                // we can continue (no need to check for more)
+                // continues to the next iteration
                 continue;
             }
             if(strstr(buf, "BLOCK_INBOUND_TCP_PORT") != NULL)
             {
                 // add the tcp port to the list of blocked ones
-                add_blocked_inbound_tcp_port(fltCfg, 10);
+                unsigned int port = 0;
+                /* moves to where the number should begin (space after the colon)
+                   and converts it to an unsigned integer */
+                sscanf(strstr(buf, " ")+1, "%u", &port);
+                // adds the port to the list of blocked ports
+                add_blocked_inbound_tcp_port(fltCfg, port);
+                // continues to the next iteration
                 continue;
             }
             if(strstr(buf, "BLOCK_IP_ADDR") != NULL)
             {
-                add_blocked_ip_address(fltCfg, 10);
+                // house where the ip address will go
+                unsigned int ipAddr[4];
+                // starts the tokenizer on buffer
+                pToken = strtok(buf, " ");
+                // parses the remainder of the string for the IP
+                parse_remainder_of_string_for_ip(ipAddr);
+                // adds the ip address to the list of blocked ips
+                add_blocked_ip_address(fltCfg, ConvertIpUIntOctetsToUInt(ipAddr));
+                // continues to the next iteration
                 continue;
             }
             if(strstr(buf, "BLOCK_PING_REQ") != NULL)
