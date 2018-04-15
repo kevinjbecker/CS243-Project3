@@ -60,6 +60,18 @@ typedef struct FWSpec_S
 /// fw_spec is the specification data storage for the firewall.
 static FWSpec_T fw_spec;
 
+/// MODE controls the mode of the firewall. main writes it and filter reads it.
+static volatile FilterMode MODE = MODE_FILTER;
+
+/// NOT_CANCELLED flag written by main and read by the thread.
+static volatile int NOT_CANCELLED = 1;
+
+/// thread object for the filter thread
+static pthread_t tid_filter;
+
+/// thread specific data key for pthread cleanup after cancellation.
+static pthread_key_t tsd_key;
+
 
 /// Open the input and output streams used for reading and writing packets.
 /// @param spec_ptr structure contains input and output stream names.
@@ -191,18 +203,6 @@ static bool create_spec(FWSpec_T *spec_p, char * config_file)
     return true;
 }
 
-/// MODE controls the mode of the firewall. main writes it and filter reads it.
-static volatile FilterMode MODE = MODE_FILTER;
-
-/// NOT_CANCELLED flag written by main and read by the thread.
-static volatile int NOT_CANCELLED = 1;
-
-/// thread object for the filter thread
-static pthread_t tid_filter;
-
-/// thread specific data key for pthread cleanup after cancellation.
-static pthread_key_t tsd_key;
-
 /// The tsd_destroy function cleans up thread specific data (TSD).
 /// The spawning thread passes this function into pthread_key_create before
 /// starting the thread.
@@ -247,7 +247,6 @@ static void init_sig_handlers()
     signal_action.sa_handler = sig_handler;       // insert handler function
 
     sigaction(SIGHUP, &signal_action, NULL);      // for HangUP from fwSim
-    // can we delete this?
     return;
 } // init_sig_handlers
 
@@ -265,7 +264,7 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
     fread(&numBytes, sizeof(int), 1, in_pipe);
     int len_read = -1; // assume error
 
-    //TODO: student implements filter_thread()
+    len_read = fread(buf, sizeof(char), numBytes, in_pipe);
 
     return len_read;
 }
@@ -286,13 +285,12 @@ static void * filter_thread(void* args)
 
     static int status = EXIT_FAILURE; // static for return persistence
 
-    status = EXIT_FAILURE; // reset
+    status = EXIT_FAILURE; // reset status
 
     FWSpec_T * spec_p = (FWSpec_T *) args;
 
-    //TODO the stuff which is good
-
-    while((read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1) && NOT_CANCELLED)
+    while(NOT_CANCELLED &&
+          (read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
     {
         // determine if packet should be filtered
         // if it's good write it to FromFirewall
@@ -316,6 +314,7 @@ static void display_menu(void)
     puts("3. Filter");
     puts("0. Exit");
     printf("> ");
+    fflush(stdout);
 }
 
 /// The firewall main function creates a filter and launches filtering thread.
@@ -353,9 +352,44 @@ int main(int argc, char* argv[])
     }
 
     // starts the pthread
-    // begins reading from user input (if needed)
+    pthread_create(&tid_filter, NULL, filter_thread, (void *)spec_p);
 
+    display_menu();
+    while(!done)
+    {
+        scanf("%d", &command);
+        switch(command)
+        {
+            case 0:
+                // exit command received, exiting
+                done = true;
+                break;
+            case 1:
+                puts("fw: blocking all packets");
+                MODE = MODE_BLOCK_ALL;
+                break;
+            case 2:
+                puts("fw: allowing all packets");
+                MODE = MODE_ALLOW_ALL;
+                break;
+            case 3:
+                puts("fw: filtering packets");
+                MODE = MODE_FILTER;
+                break;
+            default:
+                puts("Unknown command entered.");
+        }
+
+        // prints out a new prompt character
+        printf("> ");
+        fflush(stdout);
+    }
+    // when we get here we are exiting
+    puts("Exiting firewall");
     puts( "fw: main is joining the thread.");
+
+    // sets not cancelled to false; the thread needs to close down
+    NOT_CANCELLED = 0;
 
     // wait for the filter thread to terminate
     void * retval = NULL;
