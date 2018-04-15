@@ -182,7 +182,7 @@ static bool open_pipes( FWSpec_T * spec_ptr)
 /// @param buf Destination buffer for storing the packet
 /// @param buflen The length of the supplied destination buffer
 /// @return length of the packet or -1 for error
-static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen )
+static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 {
     int numRead = 0;
     int numBytes = -1;
@@ -203,7 +203,6 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen )
 /// return value and parameter must match those expected by pthread_create.
 /// @param args pointer to an FWSpec_T structure
 /// @return pointer to static exit status value which is 0 on success
-
 static void * filter_thread(void* args)
 {
     unsigned char pktBuf[MAX_PKT_LENGTH];
@@ -218,6 +217,12 @@ static void * filter_thread(void* args)
 
     //TODO the stuff which is good
 
+    while(read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1)
+    {
+        // determine if packet should be filtered
+        // if it's good write it to FromFirewall
+        // repeat
+    }
 
     // end of thread is never reached when there is a cancellation.
     puts("fw: thread is deleting filter data.");
