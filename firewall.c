@@ -258,13 +258,13 @@ static void init_sig_handlers()
 /// @return length of the packet or -1 for error
 static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 {
-    int numRead = 0;
+    //int numRead = 0;
     int numBytes = -1;
     // reads in the number of bytes we should read in
     fread(&numBytes, sizeof(int), 1, in_pipe);
-    int len_read = -1; // assume error
 
-    len_read = fread(buf, sizeof(char), numBytes, in_pipe);
+    int len_read = -1; // assume error
+    len_read = fread(buf, sizeof(unsigned char), numBytes, in_pipe);
 
     return len_read;
 }
@@ -292,6 +292,7 @@ static void * filter_thread(void* args)
     while(NOT_CANCELLED &&
           (read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
     {
+        puts("fw: read a packet");
         // determine if packet should be filtered
         // if it's good write it to FromFirewall
         // repeat

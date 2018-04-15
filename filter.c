@@ -102,8 +102,6 @@ static bool block_inbound_tcp_port(FilterConfig* fltCfg, unsigned int port)
 /// @param dstIpAddr The destination IP address of a packet
 static bool packet_is_inbound(FilterConfig* fltCfg, unsigned int srcIpAddr, unsigned int dstIpAddr)
 {
-//    unsigned int localIpAddr;      ///< the local IP address
-//    unsigned int localMask;        ///< the address mask
     unsigned int localIpMasked = fltCfg->localIpAddr & fltCfg->localMask;
     unsigned int srcIpMasked = srcIpAddr & fltCfg->localMask;
     unsigned int dstIpMasked = dstIpAddr & fltCfg->localMask;
@@ -198,6 +196,23 @@ void destroy_filter(IpPktFilter filter)
 }
 
 
+static unsigned int extractLocalMask()
+{
+    char *pToken;
+    unsigned int maskedBits, mask = 0;
+    // grabs the last bit of our tokenized string
+    pToken = strtok(NULL, "");
+    // sets the number of bits we want to mask
+    sscanf(pToken, "%u", &maskedBits);
+
+    // creates a mask
+    for(unsigned int i = 1; i <= maskedBits; ++i)
+        mask |= 1 << ((sizeof(unsigned int) * 8) - i);
+
+    return mask;
+}
+
+
 /// Configures a filter instance using the specified configuration file.
 /// Reads the file line by line and uses strtok, strcmp, and sscanf to
 /// parse each line.  After each line is successfully parsed the result
@@ -213,10 +228,10 @@ bool configure_filter(IpPktFilter filter, char* filename)
     char buf[MAX_LINE_LEN];
     // the file pointer to the configuration file
     FILE* pFile;
-    // pToken?
     char* pToken;
-    // success?
     char* success;
+
+    FilterConfig *fltCfg = (FilterConfig *) filter;
 
     // boolean to determine if the configuration was valid or not
     bool validConfig = false;
@@ -231,18 +246,50 @@ bool configure_filter(IpPktFilter filter, char* filename)
     // keeps going until we're at the end of file
     while(!feof(pFile))
     {
-        if(fgets(buf, MAX_LINE_LEN, pFile)!=NULL)
+        if(fgets(buf, MAX_LINE_LEN, pFile) == NULL)
         {
             fputs("Error, reading configuration file failed", stderr);
             break;
-            // if we hit an erro we need to break
+            // if we hit an error we need to break
         }
 
         // only process if not an empty line
         if(buf[0] != '\n')
         {
-            validConfig = true;
-            // process
+            if(strstr(buf, "LOCAL_NET") != NULL)
+            {
+                // used to set our ip address
+                unsigned int ipAddr[4];
+                // starts the tokenization on the buffer (starts at first space)
+                pToken = strtok(buf, " ");
+                // parses out the ipAddress
+                parse_remainder_of_string_for_ip(ipAddr);
+                // sets the localIpAddr in the configuration structure
+                fltCfg->localIpAddr = ConvertIpUIntOctetsToUInt(ipAddr);
+                // extracts the subnet mask and sets it in the filter configuration
+                fltCfg->localMask = extractLocalMask();
+                // configuratio is now valid
+                validConfig = true;
+                // we can continue (no need to check for more)
+                continue;
+            }
+            if(strstr(buf, "BLOCK_INBOUND_TCP_PORT") != NULL)
+            {
+                // add the tcp port to the list of blocked ones
+                add_blocked_inbound_tcp_port(fltCfg, 10);
+                continue;
+            }
+            if(strstr(buf, "BLOCK_IP_ADDR") != NULL)
+            {
+                add_blocked_ip_address(fltCfg, 10);
+                continue;
+            }
+            if(strstr(buf, "BLOCK_PING_REQ") != NULL)
+            {
+                // sets true to block inbound echo requests
+                fltCfg->blockInboundEchoReq = true;
+                // no continue statement here because it's the end of the stack
+            }
         }
     }
 
@@ -252,6 +299,7 @@ bool configure_filter(IpPktFilter filter, char* filename)
     if(validConfig == false)
         fputs("Error, configuration file must set LOCAL_NET", stderr);
 
+    // returns true if valid false if no LOCAL_NET was set in the config file
     return validConfig;
 }
 
