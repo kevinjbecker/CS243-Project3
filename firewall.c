@@ -61,6 +61,29 @@ typedef struct FWSpec_S
 static FWSpec_T fw_spec;
 
 
+/// Open the input and output streams used for reading and writing packets.
+/// @param spec_ptr structure contains input and output stream names.
+/// @return true if successful
+static bool open_pipes( FWSpec_T * spec_ptr)
+{
+    spec_ptr->pipes.in_pipe = fopen( spec_ptr->in_file, "rb");
+    if(spec_ptr->pipes.in_pipe == NULL)
+    {
+        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
+        return false;
+    }
+
+    spec_ptr->pipes.out_pipe = fopen(spec_ptr->out_file, "wb");
+    if(spec_ptr->pipes.out_pipe == NULL)
+    {
+        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
+        return false;
+    }
+
+    return true;
+}
+
+
 /// close the streams. Call this once at the end of a simulation.
 /// @param pipetab pointer to the I/O streams
 void close_pipes( Pipes_T *pipetab ) {
@@ -78,19 +101,94 @@ void close_pipes( Pipes_T *pipetab ) {
     }
 }
 
+/// TODO: document
 /// destroys the spec
-static void destroy_spec(FWSpec_T spec_p)
+static void destroy_spec(FWSpec_T * spec_p)
 {
     // closes the pipes, frees the spec and exits
     close_pipes(&spec_p->pipes);
-    // frees the data members of spec_p
-    free(spec_p->config_file);
-    free(spec_p->in_file);
-    free(spec_p->out_file);
+
+    // frees the data members of spec_p as long as they exist
+    if(spec_p->config_file != NULL)
+        free(spec_p->config_file);
+
+    if(spec_p->in_file != NULL)
+        free(spec_p->in_file);
+
+    if(spec_p->out_file != NULL)
+        free(spec_p->out_file);
+
     // destroys the filter
     destroy_filter(spec_p->filter);
+
     // finally we free the spec before exiting
-    free(spec_p);
+    if(spec_p != NULL)
+        free(spec_p);
+}
+
+
+/// creates spec
+/// TODO: Document
+/// @pre spec_p must be NULL
+static bool create_spec(FWSpec_T *spec_p, char * config_file)
+{
+    // makes sure things are good to go
+    if(spec_p != NULL)
+    {
+        fputs("Error creating spec, passed not NULL pointer.", stderr);
+        return false;
+    }
+    // allocates space
+    spec_p = malloc(sizeof(FWSpec_T));
+
+    // attempts to
+    if(spec_p == NULL)
+    {
+        perror("Error creating firewall spec");
+        return false;
+    }
+
+    // copies our config file
+    spec_p->config_file = malloc(strlen(config_file) + 1);
+    // makes sure the allocation was successful
+    if(spec_p->config_file == NULL)
+    {
+        perror("Error creating firewall spec");
+        return false;
+    }
+    strcpy(spec_p->config_file, config_file);
+
+    // creats our in_file string
+    spec_p->in_file = malloc(strlen("ToFirewall") + 1);
+    if(spec_p->in_file == NULL)
+    {
+        perror("Error creating firewall spec");
+        return false;
+    }
+    strcpy(spec_p->in_file, "ToFirewall");
+
+    // creates our out_file string
+    spec_p->out_file = malloc(strlen("FromFirewall") + 1);
+    if(spec_p->out_file == NULL)
+    {
+        perror("Error creating firewall spec");
+        return false;
+    }
+    strcpy(spec_p->out_file, "FromFirewall");
+
+
+    // creates our filter
+    spec_p->filter = create_filter();
+    // configures our filter
+    configure_filter(spec_p->filter, spec_p->config_file);
+
+
+    // attempts to open the pipes
+    if(!open_pipes(spec_p))
+        return false;
+
+    // only here can we return true
+    return true;
 }
 
 /// MODE controls the mode of the firewall. main writes it and filter reads it.
@@ -154,29 +252,6 @@ static void init_sig_handlers()
 } // init_sig_handlers
 
 
-/// Open the input and output streams used for reading and writing packets.
-/// @param spec_ptr structure contains input and output stream names.
-/// @return true if successful
-static bool open_pipes( FWSpec_T * spec_ptr)
-{
-    spec_ptr->pipes.in_pipe = fopen( spec_ptr->in_file, "rb");
-    if(spec_ptr->pipes.in_pipe == NULL)
-    {
-        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
-        return false;
-    }
-
-    spec_ptr->pipes.out_pipe = fopen(spec_ptr->out_file, "wb");
-    if(spec_ptr->pipes.out_pipe == NULL)
-    {
-        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
-        return false;
-    }
-
-    return true;
-}
-
-
 /// Read an entire IP packet from the input pipe
 /// @param in_pipe the binary input file stream
 /// @param buf Destination buffer for storing the packet
@@ -217,7 +292,7 @@ static void * filter_thread(void* args)
 
     //TODO the stuff which is good
 
-    while(read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1)
+    while((read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1) && NOT_CANCELLED)
     {
         // determine if packet should be filtered
         // if it's good write it to FromFirewall
@@ -265,31 +340,20 @@ int main(int argc, char* argv[])
 
     init_sig_handlers();
 
-    //TODO: student implements main()
-    // allocates our FWSpec
-    FWSpec_T * spec_p = malloc(sizeof(FWSpec_T));
-    // copies our config file
-    spec_p->config_file = malloc(strlen(argv[1]) + 1);
-    strcpy(spec_p->config_file, argv[1]);
-    // creats our in_file string
-    spec_p->in_file = malloc(strlen("ToFirewall") + 1);
-    strcpy(spec_p->in_file, "ToFirewall");
-    // creates our out_file string
-    spec_p->out_file = malloc(strlen("FromFirewall") + 1);
-    strcpy(spec_p->out_file, "FromFirewall");
-    // creates our filter
-    spec_p->filter = create_filter();
-    // configures our filter
-    configure_filter(spec_p->filter, spec_p->config_file);
+    // our firewall spec
+    FWSpec_T * spec_p = NULL;
 
-    // attempts to open the pipes, stops if fails
-    if(!open_pipes(spec_p))
+    // attempts to create our spec the way requested
+    if(!create_spec(spec_p, argv[1]))
     {
-        // clears our spec before exiting
+        // destroys spec
         destroy_spec(spec_p);
+        // exits with failure status
         return EXIT_FAILURE;
     }
 
+    // starts the pthread
+    // begins reading from user input (if needed)
 
     puts( "fw: main is joining the thread.");
 
