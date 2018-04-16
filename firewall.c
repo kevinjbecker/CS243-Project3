@@ -76,19 +76,19 @@ static pthread_key_t tsd_key;
 /// Open the input and output streams used for reading and writing packets.
 /// @param spec_ptr structure contains input and output stream names.
 /// @return true if successful
-static bool open_pipes( FWSpec_T * spec_ptr)
+static bool open_pipes(FWSpec_T *spec_ptr)
 {
-    spec_ptr->pipes.in_pipe = fopen( spec_ptr->in_file, "rb");
+    spec_ptr->pipes.in_pipe = fopen(spec_ptr->in_file, "rb");
     if(spec_ptr->pipes.in_pipe == NULL)
     {
-        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
+        fprintf(stderr, "fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
         return false;
     }
 
     spec_ptr->pipes.out_pipe = fopen(spec_ptr->out_file, "wb");
     if(spec_ptr->pipes.out_pipe == NULL)
     {
-        printf("fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
+        fprintf(stderr, "fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
         return false;
     }
 
@@ -98,7 +98,7 @@ static bool open_pipes( FWSpec_T * spec_ptr)
 
 /// close the streams. Call this once at the end of a simulation.
 /// @param pipetab pointer to the I/O streams
-void close_pipes( Pipes_T *pipetab ) {
+void close_pipes(Pipes_T *pipetab) {
 
     if(pipetab->in_pipe != NULL)
     {
@@ -113,96 +113,6 @@ void close_pipes( Pipes_T *pipetab ) {
     }
 }
 
-/// TODO: document
-/// destroys the spec
-static void destroy_spec(FWSpec_T * spec_p)
-{
-    // closes the pipes, frees the spec and exits
-    close_pipes(&spec_p->pipes);
-
-    // frees the data members of spec_p as long as they exist
-    if(spec_p->config_file != NULL)
-        free(spec_p->config_file);
-
-    if(spec_p->in_file != NULL)
-        free(spec_p->in_file);
-
-    if(spec_p->out_file != NULL)
-        free(spec_p->out_file);
-
-    // destroys the filter
-    destroy_filter(spec_p->filter);
-
-    // finally we free the spec before exiting
-    if(spec_p != NULL)
-        free(spec_p);
-}
-
-
-/// creates spec
-/// TODO: Document
-/// @pre spec_p must be NULL
-static bool create_spec(FWSpec_T *spec_p, char * config_file)
-{
-    // makes sure things are good to go
-    if(spec_p != NULL)
-    {
-        fputs("Error creating spec, passed not NULL pointer.", stderr);
-        return false;
-    }
-    // allocates space
-    spec_p = malloc(sizeof(FWSpec_T));
-
-    // attempts to
-    if(spec_p == NULL)
-    {
-        perror("Error creating firewall spec");
-        return false;
-    }
-
-    // copies our config file
-    spec_p->config_file = malloc(strlen(config_file) + 1);
-    // makes sure the allocation was successful
-    if(spec_p->config_file == NULL)
-    {
-        perror("Error creating firewall spec");
-        return false;
-    }
-    strcpy(spec_p->config_file, config_file);
-
-    // creats our in_file string
-    spec_p->in_file = malloc(strlen("ToFirewall") + 1);
-    if(spec_p->in_file == NULL)
-    {
-        perror("Error creating firewall spec");
-        return false;
-    }
-    strcpy(spec_p->in_file, "ToFirewall");
-
-    // creates our out_file string
-    spec_p->out_file = malloc(strlen("FromFirewall") + 1);
-    if(spec_p->out_file == NULL)
-    {
-        perror("Error creating firewall spec");
-        return false;
-    }
-    strcpy(spec_p->out_file, "FromFirewall");
-
-
-    // creates our filter
-    spec_p->filter = create_filter();
-    // configures our filter
-    if(!configure_filter(spec_p->filter, spec_p->config_file))
-        return false;
-
-
-    // attempts to open the pipes
-    if(!open_pipes(spec_p))
-        return false;
-
-    // only here can we return true
-    return true;
-}
 
 /// The tsd_destroy function cleans up thread specific data (TSD).
 /// The spawning thread passes this function into pthread_key_create before
@@ -221,7 +131,7 @@ void tsd_destroy(void * tsd_data) {
         destroy_filter(fw_spec->filter);
         fw_spec->filter = NULL;
     }
-    puts("fw: thread destructor is closing pipes.\n");
+    puts("fw: thread destructor is closing pipes.");
     close_pipes(&fw_spec->pipes);
 }
 
@@ -237,10 +147,10 @@ static void sig_handler(int signum)
     }
 }
 
+
 /// init_sig_handlers initializes sigaction and installs signal handlers.
 static void init_sig_handlers()
 {
-
     struct sigaction signal_action;               // define sig handler table
 
     signal_action.sa_flags = 0;                   // linux lacks SA_RESTART
@@ -259,16 +169,15 @@ static void init_sig_handlers()
 /// @return length of the packet or -1 for error
 static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 {
-    puts("ay");
-    //int numRead = 0;
+    int numRead = 0;
     int numBytes = -1;
     // reads in the number of bytes we should read in
     fread(&numBytes, sizeof(int), 1, in_pipe);
-    int len_read = -1; // assume error
-    // reads in the number of bytes specified in numBytes
-    len_read = fread(buf, sizeof(unsigned char), numBytes, in_pipe);
 
-    return len_read;
+    // reads in the number of bytes specified in numBytes
+    numRead = fread(buf, numBytes, 1, in_pipe);
+    // returns -1 if something went wrong, otherwise the number of bytes read in
+    return (numRead * numBytes == numBytes) ? numBytes : -1;
 }
 
 
@@ -281,6 +190,10 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 /// @return pointer to static exit status value which is 0 on success
 static void * filter_thread(void* args)
 {
+    // sets the tsd specific destructor
+    pthread_setspecific(tsd_key, (void *)&fw_spec);
+
+    // a few variables needed for running
     unsigned char pktBuf[MAX_PKT_LENGTH];
     bool success;
     int length;
@@ -294,8 +207,15 @@ static void * filter_thread(void* args)
     while(NOT_CANCELLED &&
           (length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
     {
-        puts("fw: read a packet");
-        fwrite(pktBuf, length, 1, spec_p->pipes.out_pipe);
+        // determines if the packet should be let through or not
+        if((MODE == MODE_FILTER && filter_packet(spec_p->filter, pktBuf)) ||
+            MODE == MODE_ALLOW_ALL)
+        {
+            // writes the size of the packet
+            //fwrite(&length, sizeof(int), 1, spec_p->pipes.out_pipe);
+            // writes the actual packet
+            //fwrite(pktBuf, length, 1, spec_p->pipes.out_pipe);
+        }
     }
 
     // end of thread is never reached when there is a cancellation.
@@ -338,24 +258,28 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    // initializes the signal handlers
     init_sig_handlers();
 
-    // our firewall spec
-    FWSpec_T * spec_p = NULL;
-
-    // attempts to create our spec the way requested
-    if(!create_spec(spec_p, argv[1]))
+    // sets the three filename strings
+    fw_spec.config_file = argv[1];
+    fw_spec.in_file = "ToFirewall";
+    fw_spec.out_file = "FromFirewall";
+    fw_spec.filter = create_filter();
+    configure_filter(&fw_spec.filter, fw_spec.config_file);
+    if(!open_pipes(&fw_spec))
     {
-        // destroys spec
-        destroy_spec(spec_p);
-        // exits with failure status
+        close_pipes(&fw_spec.pipes);
+        destroy_filter(&fw_spec.filter);
         return EXIT_FAILURE;
     }
 
-    // starts the pthread
-    pthread_create(&tid_filter, NULL, filter_thread, (void *)spec_p);
+    puts("fw: starting filter thread.");
+    pthread_key_create(&tsd_key, tsd_destroy);
+    // starts the filter thread
+    pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
 
-    // thread is started, display the menu
+    // thread is started, display the menu now
     display_menu();
     // keeps looping until the user says it needs to stop
     while(!done)
@@ -379,8 +303,6 @@ int main(int argc, char* argv[])
                 puts("fw: filtering packets");
                 MODE = MODE_FILTER;
                 break;
-            default:
-                puts("Unknown command entered.");
         }
 
         // prints out a new prompt character

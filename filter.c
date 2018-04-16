@@ -239,21 +239,21 @@ bool configure_filter(IpPktFilter filter, char* filename)
     pFile = fopen(filename, "r");
     if(pFile == NULL)
     {
-        perror("Error opening configuration file\n");
+        perror("Error opening configuration file");
         return false;
     }
 
-    // keeps going until we're at the end of file
-    while(!feof(pFile))
+    // keeps going until we break
+    while(true)
     {
         fgets(buf, MAX_LINE_LEN, pFile);
-        /*
         if(fgets(buf, MAX_LINE_LEN, pFile) == NULL)
         {
-            fputs("Error, reading configuration file failed\n", stderr);
+            if(!feof(pFile))
+                fputs("Error, reading configuration file failed\n", stderr);
             break;
             // if we hit an error we need to break
-        }*/
+        }
 
         // only process if not an empty line
         if(buf[0] != '\n')
@@ -309,7 +309,7 @@ bool configure_filter(IpPktFilter filter, char* filename)
         }
     }
 
-    // closes the file before we exit
+    // closes the file before we exit (saves memory)
     fclose(pFile);
 
     if(validConfig == false)
