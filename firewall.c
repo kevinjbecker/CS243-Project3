@@ -13,7 +13,7 @@
 /// The content of this file is protected as an unpublished work.
 
 /// posix needed for signal handling
-#define _POSIX_SOURCE
+#define _BSD_SOURCE
 
 #include <sys/wait.h>
 #include <assert.h>
@@ -84,14 +84,12 @@ static bool open_pipes(FWSpec_T *spec_ptr)
         fprintf(stderr, "fw: ERROR: failed to open pipe %s.\n", spec_ptr->in_file);
         return false;
     }
-
     spec_ptr->pipes.out_pipe = fopen(spec_ptr->out_file, "wb");
     if(spec_ptr->pipes.out_pipe == NULL)
     {
         fprintf(stderr, "fw: ERROR: failed to open pipe %s.\n", spec_ptr->out_file);
         return false;
     }
-
     return true;
 }
 
@@ -172,12 +170,33 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
     int numRead = 0;
     int numBytes = -1;
     // reads in the number of bytes we should read in
-    fread(&numBytes, sizeof(int), 1, in_pipe);
+    if(fread(&numBytes, sizeof(int), 1, in_pipe) != 1)
+    {
+        fprintf(stderr, "fw: ERROR: error reading packet size.\n");
+        return -1;
+    }
+
+    // if the number of bytes for this packet is too large, we need to abort
+    if(numBytes > buflen)
+    {
+        // alerts that an incoming packet is too big
+        fprintf(stderr, "fw: ERROR: packet is too large.\n");
+        //return -1 as failure
+        return -1;
+    }
 
     // reads in the number of bytes specified in numBytes
-    numRead = fread(buf, numBytes, 1, in_pipe);
+    numRead = fread(buf, sizeof(unsigned char), numBytes, in_pipe);
     // returns -1 if something went wrong, otherwise the number of bytes read in
-    return (numRead * numBytes == numBytes) ? numBytes : -1;
+    if(numBytes != numRead)
+    {
+        // prints that something went wrong
+        fprintf(stderr, "fw: ERROR: numBytes != numRead (%d != %d).\n", numBytes, numRead);
+        // returns -1
+        return -1;
+    }
+    // returns the number of read bytes
+    return numRead;
 }
 
 
@@ -191,36 +210,49 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 static void * filter_thread(void* args)
 {
     // sets the tsd specific destructor
-    pthread_setspecific(tsd_key, (void *)&fw_spec);
+    // pthread_setspecific(tsd_key, (void *)&fw_spec);
 
     // a few variables needed for running
     unsigned char pktBuf[MAX_PKT_LENGTH];
-    bool success;
+    //bool success = false;
     int length;
-
     static int status = EXIT_FAILURE; // static for return persistence
-
     status = EXIT_FAILURE; // reset status
-
+    // our firewall specification (need to case since it is void)
     FWSpec_T * spec_p = (FWSpec_T *) args;
-
     while(NOT_CANCELLED &&
-          (length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH) != -1))
+          ((length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH)) != -1))
     {
         // determines if the packet should be let through or not
         if((MODE == MODE_FILTER && filter_packet(spec_p->filter, pktBuf)) ||
             MODE == MODE_ALLOW_ALL)
         {
             // writes the size of the packet
-            //fwrite(&length, sizeof(int), 1, spec_p->pipes.out_pipe);
+            if(fwrite(&length, sizeof(int), 1, spec_p->pipes.out_pipe) != 1)
+                fprintf(stderr, "fw: ERROR: there was an issue writing packet size.\n");
             // writes the actual packet
-            //fwrite(pktBuf, length, 1, spec_p->pipes.out_pipe);
+            if(fwrite(pktBuf, length, 1, spec_p->pipes.out_pipe) != 1)
+                fprintf(stderr, "fw: ERROR: there was an issue writing packet.\n");
+
+            // flushes the output for fwSim to read
+            fflush(spec_p->pipes.out_pipe);
+
+            /* A bit of reasoning behind this next sleep, since NOT_CANCELLED might
+               be changed between the flush and the next fread, there is a
+               possibility for the thread to be blocking before NOT_CANCELLED is
+               set.  Thus, sleeping for a tiny bit will allow for NOT_CANCELLED to
+               be set in time for the loop to exit. */
+            usleep(100);
         }
     }
-
     // end of thread is never reached when there is a cancellation.
     puts("fw: thread is deleting filter data.");
     tsd_destroy((void *)spec_p);
+
+    // changes status to be success if we broke the loop successfully
+    if(!NOT_CANCELLED && length != -1)
+        status = EXIT_SUCCESS;
+
     printf("fw: thread returning. status: %d\n", status);
 
     pthread_exit(&status);
@@ -230,6 +262,7 @@ static void * filter_thread(void* args)
 /// Displays a prompt to stdout and menu of commands that a user can choose
 static void display_menu(void)
 {
+    // prints an options menu
     puts("\n\n1. Block All");
     puts("2. Allow All");
     puts("3. Filter");
@@ -265,8 +298,11 @@ int main(int argc, char* argv[])
     fw_spec.config_file = argv[1];
     fw_spec.in_file = "ToFirewall";
     fw_spec.out_file = "FromFirewall";
+    // creates and configures the filter
     fw_spec.filter = create_filter();
-    configure_filter(&fw_spec.filter, fw_spec.config_file);
+    configure_filter(fw_spec.filter, fw_spec.config_file);
+
+    // opens the two named pipes (how do made faster??)
     if(!open_pipes(&fw_spec))
     {
         close_pipes(&fw_spec.pipes);
@@ -274,7 +310,9 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    // prints that we are going to start the listener thread
     puts("fw: starting filter thread.");
+    // creates a pthread key
     pthread_key_create(&tsd_key, tsd_destroy);
     // starts the filter thread
     pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
@@ -284,7 +322,9 @@ int main(int argc, char* argv[])
     // keeps looping until the user says it needs to stop
     while(!done)
     {
-        scanf("%d", &command);
+        // attempts to read in user input, prints an error if an issue occurs
+        if(scanf("%d", &command) != 1)
+            fprintf(stderr, "fw: ERROR: error reading user input, skipping.\n");
         switch(command)
         {
             case 0:
@@ -309,9 +349,11 @@ int main(int argc, char* argv[])
         printf("> ");
         fflush(stdout);
     }
+
     // when we get here we are exiting
     puts("Exiting firewall");
-    puts( "fw: main is joining the thread.");
+
+    puts("fw: main is joining the thread.");
 
     // sets not cancelled to false; the thread needs to close down
     NOT_CANCELLED = 0;

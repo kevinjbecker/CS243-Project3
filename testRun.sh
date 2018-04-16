@@ -25,12 +25,12 @@ VGRIND5="valgrind --leak-check=full --show-leak-kinds=all --suppressions=valgrin
 # Test Choices Array
 #
 declare -a tstid=(
-'fwSim' 
-"fwSim -i packets.3 -o ${OPATH} -d 20 -- $SOLUTION config1.txt "
-"fwSim -i packets.3 -o ${OPATH} -d 20 -- $VGRIND2 $SOLUTION config1.txt "
-"fwSim -i packets.3 -o ${OPATH} -d 20 -- $VGRIND0 ./firewall config1.txt "
+'./fwSim'
+"./fwSim -i packets.3 -o ${OPATH} -d 20 -- $SOLUTION config1.txt "
+"./fwSim -i packets.3 -o ${OPATH} -d 20 -- $VGRIND2 $SOLUTION config1.txt "
+"./fwSim -i packets.3 -o ${OPATH} -d 20 -- $VGRIND0 ./firewall config1.txt "
 # add further choices for your test suite
-) 
+)
 
 # echo ${tstid[@]}
 #

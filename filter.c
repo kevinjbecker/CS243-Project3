@@ -228,8 +228,6 @@ bool configure_filter(IpPktFilter filter, char* filename)
     char buf[MAX_LINE_LEN];
     // the file pointer to the configuration file
     FILE* pFile;
-    char* pToken;
-    char* success;
 
     FilterConfig *fltCfg = (FilterConfig *) filter;
 
@@ -246,7 +244,6 @@ bool configure_filter(IpPktFilter filter, char* filename)
     // keeps going until we break
     while(true)
     {
-        fgets(buf, MAX_LINE_LEN, pFile);
         if(fgets(buf, MAX_LINE_LEN, pFile) == NULL)
         {
             if(!feof(pFile))
@@ -262,8 +259,8 @@ bool configure_filter(IpPktFilter filter, char* filename)
             {
                 // used to set our ip address
                 unsigned int ipAddr[4];
-                // starts the tokenization on the buffer (starts at first space)
-                pToken = strtok(buf, " ");
+                // starts the tokenizer on buffer (we don't care about return)
+                strtok(buf, " ");
                 // parses out the ipAddress
                 parse_remainder_of_string_for_ip(ipAddr);
                 // sets the localIpAddr in the configuration structure
@@ -291,8 +288,8 @@ bool configure_filter(IpPktFilter filter, char* filename)
             {
                 // house where the ip address will go
                 unsigned int ipAddr[4];
-                // starts the tokenizer on buffer
-                pToken = strtok(buf, " ");
+                // starts the tokenizer on buffer (we don't care about return)
+                strtok(buf, " ");
                 // parses the remainder of the string for the IP
                 parse_remainder_of_string_for_ip(ipAddr);
                 // adds the ip address to the list of blocked ips
