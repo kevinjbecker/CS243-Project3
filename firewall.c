@@ -332,8 +332,6 @@ int main(int argc, char* argv[])
         {
             case EXIT:
                 // exit command received, exiting
-                NOT_CANCELLED = 0;
-                // sets not cancelled to false; the thread needs to close down
                 done = true;
                 break;
             case BLOCK:
