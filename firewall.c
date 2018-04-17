@@ -13,7 +13,7 @@
 /// The content of this file is protected as an unpublished work.
 
 /// posix needed for signal handling
-#define _BSD_SOURCE
+#define _POSIX_SOURCE
 
 #include <sys/wait.h>
 #include <assert.h>
@@ -38,6 +38,14 @@ typedef enum FilterMode_E
     MODE_ALLOW_ALL,
     MODE_FILTER
 } FilterMode;
+
+/// Type used to determine commands from user
+enum RunMode_e{
+    EXIT,
+    BLOCK,
+    ALLOW,
+    FILTER
+};
 
 
 /// Pipes_S structure maintains the stream pointers.
@@ -209,8 +217,8 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 /// @return pointer to static exit status value which is 0 on success
 static void * filter_thread(void* args)
 {
-    // sets the tsd specific destructor
-    // pthread_setspecific(tsd_key, (void *)&fw_spec);
+    // sets the tsd specific destructor (to delete the thread stuff)
+    pthread_setspecific(tsd_key, args);
 
     // a few variables needed for running
     unsigned char pktBuf[MAX_PKT_LENGTH];
@@ -220,8 +228,10 @@ static void * filter_thread(void* args)
     status = EXIT_FAILURE; // reset status
     // our firewall specification (need to case since it is void)
     FWSpec_T * spec_p = (FWSpec_T *) args;
+
+    // keeps looping unless NOT_CANCELLED is set to 0, or read_packet returns -1
     while(NOT_CANCELLED &&
-          ((length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH)) != -1))
+          (length = read_packet(spec_p->pipes.in_pipe, pktBuf, MAX_PKT_LENGTH)) != -1)
     {
         // determines if the packet should be let through or not
         if((MODE == MODE_FILTER && filter_packet(spec_p->filter, pktBuf)) ||
@@ -236,13 +246,6 @@ static void * filter_thread(void* args)
 
             // flushes the output for fwSim to read
             fflush(spec_p->pipes.out_pipe);
-
-            /* A bit of reasoning behind this next sleep, since NOT_CANCELLED might
-               be changed between the flush and the next fread, there is a
-               possibility for the thread to be blocking before NOT_CANCELLED is
-               set.  Thus, sleeping for a tiny bit will allow for NOT_CANCELLED to
-               be set in time for the loop to exit. */
-            usleep(100);
         }
     }
     // end of thread is never reached when there is a cancellation.
@@ -327,19 +330,21 @@ int main(int argc, char* argv[])
             fprintf(stderr, "fw: ERROR: error reading user input, skipping.\n");
         switch(command)
         {
-            case 0:
+            case EXIT:
                 // exit command received, exiting
+                NOT_CANCELLED = 0;
+                // sets not cancelled to false; the thread needs to close down
                 done = true;
                 break;
-            case 1:
+            case BLOCK:
                 puts("fw: blocking all packets");
                 MODE = MODE_BLOCK_ALL;
                 break;
-            case 2:
+            case ALLOW:
                 puts("fw: allowing all packets");
                 MODE = MODE_ALLOW_ALL;
                 break;
-            case 3:
+            case FILTER:
                 puts("fw: filtering packets");
                 MODE = MODE_FILTER;
                 break;
@@ -351,12 +356,11 @@ int main(int argc, char* argv[])
     }
 
     // when we get here we are exiting
-    puts("Exiting firewall");
+    puts("\nExiting firewall");
 
-    puts("fw: main is joining the thread.");
-
-    // sets not cancelled to false; the thread needs to close down
-    NOT_CANCELLED = 0;
+    // cancels the thread to unblock it
+    pthread_cancel(tid_filter);
+    puts("fw: main is joining the thread");
 
     // wait for the filter thread to terminate
     void * retval = NULL;
