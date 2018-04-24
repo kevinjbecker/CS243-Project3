@@ -222,12 +222,11 @@ static void * filter_thread(void* args)
 
     // a few variables needed for running
     unsigned char pktBuf[MAX_PKT_LENGTH];
-    //bool success = false;
-    int length;
-    static int status = EXIT_FAILURE; // static for return persistence
-    status = EXIT_FAILURE; // reset status
     // our firewall specification (need to case since it is void)
     FWSpec_T * spec_p = (FWSpec_T *) args;
+    int length;
+    static int status = EXIT_FAILURE; // static for return persistence
+    status = EXIT_FAILURE;            // reset status
 
     // keeps looping unless NOT_CANCELLED is set to 0, or read_packet returns -1
     while(NOT_CANCELLED &&
@@ -248,6 +247,7 @@ static void * filter_thread(void* args)
             fflush(spec_p->pipes.out_pipe);
         }
     }
+
     // end of thread is never reached when there is a cancellation.
     puts("fw: thread is deleting filter data.");
     tsd_destroy((void *)spec_p);
@@ -258,6 +258,8 @@ static void * filter_thread(void* args)
 
     printf("fw: thread returning. status: %d\n", status);
 
+    // sets not cancelled right before finish
+    NOT_CANCELLED = false;
     pthread_exit(&status);
 }
 
@@ -284,8 +286,9 @@ static void display_menu(void)
 /// @return EXIT_SUCCESS or EXIT_FAILURE
 int main(int argc, char* argv[])
 {
+    return EXIT_SUCCESS;
     int command;
-    bool done = false;
+    bool done = false, startFilterThread = false;
 
     // print usage message if no arguments
     if(argc < 2)
@@ -303,51 +306,48 @@ int main(int argc, char* argv[])
     fw_spec.out_file = "FromFirewall";
     // creates and configures the filter
     fw_spec.filter = create_filter();
-    configure_filter(fw_spec.filter, fw_spec.config_file);
-
-    // opens the two named pipes (how do made faster??)
-    if(!open_pipes(&fw_spec))
-    {
-        close_pipes(&fw_spec.pipes);
-        destroy_filter(&fw_spec.filter);
-        return EXIT_FAILURE;
-    }
-
+    startFilterThread = configure_filter(fw_spec.filter, fw_spec.config_file) &&
+                        open_pipes(&fw_spec);
     // prints that we are going to start the listener thread
     puts("fw: starting filter thread.");
-    // creates a pthread key
-    pthread_key_create(&tsd_key, tsd_destroy);
-    // starts the filter thread
-    pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
 
-    // thread is started, display the menu now
+    // if we are able to start the thread we do it here
+    if(startFilterThread)
+    {
+        // creates a pthread key
+        pthread_key_create(&tsd_key, tsd_destroy);
+        // starts the filter thread
+        pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
+    }
+
+    // display the menu now
     display_menu();
     // keeps looping until the user says it needs to stop
     while(!done)
     {
-        // attempts to read in user input, prints an error if an issue occurs
-        if(scanf("%d", &command) != 1)
-            fprintf(stderr, "fw: ERROR: error reading user input, skipping.\n");
-        switch(command)
+        // attempts to read in user input, only continues inward if 1 command
+        if(scanf("%d", &command) == 1)
         {
-            case EXIT:
-                // exit command received, exiting
-                done = true;
-                break;
-            case BLOCK:
-                puts("fw: blocking all packets");
-                MODE = MODE_BLOCK_ALL;
-                break;
-            case ALLOW:
-                puts("fw: allowing all packets");
-                MODE = MODE_ALLOW_ALL;
-                break;
-            case FILTER:
-                puts("fw: filtering packets");
-                MODE = MODE_FILTER;
-                break;
+            switch(command)
+            {
+                case EXIT:
+                    // exit command received, exiting
+                    done = true;
+                    break;
+                case BLOCK:
+                    puts("blocking all packets");
+                    MODE = MODE_BLOCK_ALL;
+                    break;
+                case ALLOW:
+                    puts("allowing all packets");
+                    MODE = MODE_ALLOW_ALL;
+                    break;
+                case FILTER:
+                    puts("filtering packets");
+                    MODE = MODE_FILTER;
+                    break;
+            }
         }
-
         // prints out a new prompt character
         printf("> ");
         fflush(stdout);
@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
 
     // cancels the thread to unblock it
     pthread_cancel(tid_filter);
-    puts("fw: main is joining the thread");
+    puts("fw: main is joining the thread.");
 
     // wait for the filter thread to terminate
     void * retval = NULL;

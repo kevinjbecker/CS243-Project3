@@ -310,7 +310,7 @@ bool configure_filter(IpPktFilter filter, char* filename)
     fclose(pFile);
 
     if(validConfig == false)
-        fputs("Error, configuration file must set LOCAL_NET", stderr);
+        fputs("ERROR: configuration file must set LOCAL_NET\n", stderr);
 
     // returns true if valid false if no LOCAL_NET was set in the config file
     return validConfig;

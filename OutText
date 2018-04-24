@@ -1,0 +1,613 @@
+./fwSim -i packets.3 -o ./OutData -d 20 -- valgrind --leak-check=full ./firewall config1.txt
+== Memcheck, a memory error detector
+== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+== Command: ./firewall config1.txt
+== 
+firewall command:
+valgrind --leak-check=full ./firewall config1.txt 
+RCVR: opened file ./OutData
+SNDR: Waiting 20ms between packets
+SNDR: Number of packets: 191
+SNDR: Starting packet 1
+fw: starting filter thread.
+
+
+1. Block All
+2. Allow All
+3. Filter
+0. Exit
+> SNDR: Starting packet 2
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 3
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 4
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 5
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 6
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 7
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 8
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 9
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 10
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 11
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 12
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 13
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 14
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 15
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 16
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 17
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 18
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 19
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 20
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 21
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 22
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 23
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 24
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 25
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 26
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 27
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 28
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 29
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 30
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 31
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 32
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 33
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 34
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 35
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 36
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 37
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 38
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 39
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 40
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 41
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 42
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 43
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 44
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 45
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 46
+SNDR: Starting packet 47
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 48
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 49
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 50
+SNDR: Starting packet 51
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 52
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 53
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 54
+SNDR: Starting packet 55
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 56
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 57
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 58
+SNDR: Starting packet 59
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 60
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 61
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 62
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 63
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 64
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 65
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 66
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 67
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 68
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 69
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 70
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 71
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 72
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 73
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 74
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 75
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 76
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 77
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 78
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 79
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 80
+RCVR: 69.207.190.106 -> 74.125.196.147
+SNDR: Starting packet 81
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 82
+RCVR: 74.125.196.147 -> 69.207.190.106
+SNDR: Starting packet 83
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 84
+SNDR: Starting packet 85
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 86
+RCVR: 69.207.190.106 -> 74.125.196.147
+SNDR: Starting packet 87
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 88
+RCVR: 74.125.196.147 -> 69.207.190.106
+SNDR: Starting packet 89
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 90
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 91
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 92
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 93
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 94
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 95
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 96
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 97
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 98
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 99
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 100
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 101
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 102
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 103
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 104
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 105
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 106
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 107
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 108
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 109
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 110
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 111
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 112
+RCVR: 69.207.190.106 -> 74.125.196.147
+SNDR: Starting packet 113
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 114
+RCVR: 74.125.196.147 -> 69.207.190.106
+SNDR: Starting packet 115
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 116
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 117
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 118
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 119
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 120
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 121
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 122
+RCVR: 129.21.30.99 -> 69.207.190.106
+SNDR: Starting packet 123
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 124
+RCVR: 69.207.190.106 -> 129.21.30.99
+SNDR: Starting packet 125
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 126
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 127
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 128
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 129
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 130
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 131
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 132
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 133
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 134
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 135
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 136
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 137
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 138
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 139
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 140
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 141
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 142
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 143
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 144
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 145
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 146
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 147
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 148
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 149
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 150
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 151
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 152
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 153
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 154
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 155
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 156
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 157
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 158
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 159
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 160
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 161
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 162
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 163
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 164
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 165
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 166
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 167
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 168
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 169
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 170
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 171
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 172
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 173
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 174
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 175
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 176
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 177
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 178
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 179
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 180
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 181
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 182
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 183
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 184
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 185
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 186
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 187
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 188
+RCVR: 69.207.190.106 -> 129.21.37.13
+SNDR: Starting packet 189
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 190
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Starting packet 191
+RCVR: 129.21.37.13 -> 69.207.190.106
+SNDR: Finished, wrote 191 packets to the pipe
+FwSim: Commanding firewall to Exit
+RCVR: 69.207.190.106 -> 129.21.37.13
+== 
+== HEAP SUMMARY:
+==     in use at exit: 1,614 bytes in 4 blocks
+==   total heap usage: 18 allocs, 14 frees, 398,918 bytes allocated
+== 
+== LEAK SUMMARY:
+==    definitely lost: 0 bytes in 0 blocks
+==    indirectly lost: 0 bytes in 0 blocks
+==      possibly lost: 0 bytes in 0 blocks
+==    still reachable: 1,614 bytes in 4 blocks
+==         suppressed: 0 bytes in 0 blocks
+== Reachable blocks (those to which a pointer was found) are not shown.
+== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+== 
+== For counts of detected and suppressed errors, rerun with: -v
+== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+> 
+Exiting firewall
+fw: main is joining the thread
+fw: thread destructor is deleting filter data.
+fw: thread destructor is closing pipes.
+fw: main confirmed that the thread was canceled.
+fw: main returning.
+
+FwSim: firewall exited with EXIT_SUCCESS
+FwSim: main is now cleaning up.
+FwSim: joining on receiver ...
+
+********** Analyzing the packets that passed through the firewall ***********
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   52,               SYN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   52,           ACK SYN
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   81,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   68,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  552,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  168,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  196,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   56,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  576,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  552,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   56,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  888,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   56,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  108,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  108,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  140,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  108,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  336,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   52,               SYN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   52,           ACK SYN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  336,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:  770,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   76,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  108,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  156,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   76,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:  140,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   76,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  128,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  296,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  108,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:  623,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  108,               ACK
+   69.207.190.106 ->  74.125.196.147,  prot: 1, len:   60,      ECHO REQUEST
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   74.125.196.147 ->  69.207.190.106,  prot: 1, len:   60,        ECHO REPLY
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->  74.125.196.147,  prot: 1, len:   60,      ECHO REQUEST
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   74.125.196.147 ->  69.207.190.106,  prot: 1, len:   60,        ECHO REPLY
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   40,           ACK FIN
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,           ACK FIN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  332,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   52,               SYN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  108,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   52,           ACK SYN
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:  834,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:  779,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->  74.125.196.147,  prot: 1, len:   60,      ECHO REQUEST
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   74.125.196.147 ->  69.207.190.106,  prot: 1, len:   60,        ECHO REPLY
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:  877,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1500,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.30.99 ->  69.207.190.106,  prot: 6, len: 1284,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.30.99,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  156,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  124,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  252,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  124,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   92,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:  180,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   76,               ACK
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,           ACK FIN
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   52,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,               ACK
+     129.21.37.13 ->  69.207.190.106,  prot: 6, len:   40,           ACK FIN
+   69.207.190.106 ->    129.21.37.13,  prot: 6, len:   40,               ACK
+FwSim: now exiting.
