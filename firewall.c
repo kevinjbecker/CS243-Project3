@@ -17,7 +17,6 @@
 
 #include <sys/wait.h>
 #include <assert.h>
-#include <ctype.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>      /* interrupt signal stuff is from here */
@@ -175,8 +174,8 @@ static void init_sig_handlers()
 /// @return length of the packet or -1 for error
 static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
 {
-    int numRead = 0;
-    int numBytes = -1;
+    // the number of bytes the packet is as well as the number of bytes read
+    int numBytes = 0, numRead = 0;
     // reads in the number of bytes we should read in
     if(fread(&numBytes, sizeof(int), 1, in_pipe) != 1)
     {
@@ -193,7 +192,9 @@ static int read_packet(FILE * in_pipe, unsigned char* buf, int buflen)
         return -1;
     }
 
-    // reads in the number of bytes specified in numBytes
+    /* reads in the number of bytes specified in numBytes
+       NOTE: this reads in a single byte, numBytes time (so when -b in fwSim
+       is used, the fread will read all of the possible bytes) */
     numRead = fread(buf, sizeof(unsigned char), numBytes, in_pipe);
     // returns -1 if something went wrong, otherwise the number of bytes read in
     if(numBytes != numRead)
@@ -220,10 +221,11 @@ static void * filter_thread(void* args)
     // sets the tsd specific destructor (to delete the thread stuff)
     pthread_setspecific(tsd_key, args);
 
-    // a few variables needed for running
-    unsigned char pktBuf[MAX_PKT_LENGTH];
     // our firewall specification (need to case since it is void)
     FWSpec_T * spec_p = (FWSpec_T *) args;
+    // a few variables needed for running
+    unsigned char pktBuf[MAX_PKT_LENGTH];
+    // used to store the length of the read packet
     int length;
     static int status = EXIT_FAILURE; // static for return persistence
     status = EXIT_FAILURE;            // reset status
@@ -256,6 +258,7 @@ static void * filter_thread(void* args)
     if(!NOT_CANCELLED && length != -1)
         status = EXIT_SUCCESS;
 
+    // print that the thread is about to return
     printf("fw: thread returning. status: %d\n", status);
 
     // sets not cancelled right before finish
@@ -286,7 +289,9 @@ static void display_menu(void)
 /// @return EXIT_SUCCESS or EXIT_FAILURE
 int main(int argc, char* argv[])
 {
+    // the command read in from stdin
     int command;
+    // used to determine if the firewall is done running
     bool done = false;
 
     // print usage message if no arguments
@@ -303,7 +308,7 @@ int main(int argc, char* argv[])
     fw_spec.config_file = argv[1];
     fw_spec.in_file = "ToFirewall";
     fw_spec.out_file = "FromFirewall";
-    // creates and configures the filter
+    // creates and configures the filter and exits if something goes wrong
     fw_spec.filter = create_filter();
     if(!configure_filter(fw_spec.filter, fw_spec.config_file))
     {
@@ -311,7 +316,7 @@ int main(int argc, char* argv[])
         destroy_filter(fw_spec.filter);
         return EXIT_FAILURE;
     }
-
+    // opens the pipes and exits if something goes wrong
     if(!open_pipes(&fw_spec))
     {
         // pipe opening was wrong, need to teardown and exit
@@ -330,7 +335,7 @@ int main(int argc, char* argv[])
     // display the menu now
     display_menu();
     // keeps looping until the told it needs to stop
-    while(!done)
+    while(NOT_CANCELLED && !done)
     {
         // attempts to read in user input, only continues inward if 1 command
         if(scanf("%d", &command) == 1)
