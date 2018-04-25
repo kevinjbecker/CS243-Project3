@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
 #include "filter.h"
 #include "pktUtility.h"
 
@@ -123,6 +122,7 @@ static void add_blocked_ip_address(FilterConfig* fltCfg, unsigned int ipAddr)
     // reallocates the blockedIpAddresses array
     fltCfg->blockedIpAddresses = realloc(fltCfg->blockedIpAddresses,
                                          sizeof(unsigned int) * newSize);
+    // sets the new size of the array
     fltCfg->numBlockedIpAddresses = newSize;
     // sets in place our new IP address
     fltCfg->blockedIpAddresses[newSize - 1] = ipAddr;
@@ -141,7 +141,7 @@ static void add_blocked_inbound_tcp_port(FilterConfig* fltCfg, unsigned int port
     // reallocates the blockedInboundTcpPorts array
     fltCfg->blockedInboundTcpPorts = realloc(fltCfg->blockedInboundTcpPorts,
                                              sizeof(unsigned int) * newSize);
-
+    // sets the new size of the array
     fltCfg->numBlockedInboundTcpPorts = newSize;
     // sets in place our new port
     fltCfg->blockedInboundTcpPorts[newSize - 1] = port;
@@ -237,7 +237,7 @@ bool configure_filter(IpPktFilter filter, char* filename)
     pFile = fopen(filename, "r");
     if(pFile == NULL)
     {
-        perror("Error opening configuration file");
+        fprintf(stderr, "ERROR: invalid config file\n");
         return false;
     }
 
@@ -247,70 +247,72 @@ bool configure_filter(IpPktFilter filter, char* filename)
         if(fgets(buf, MAX_LINE_LEN, pFile) == NULL)
         {
             if(!feof(pFile))
-                fputs("Error, reading configuration file failed\n", stderr);
+                fprintf(stderr, "ERROR: reading configuration file failed\n");
             break;
             // if we hit an error we need to break
         }
 
-        // only process if not an empty line
-        if(buf[0] != '\n')
+        // skip if empty line (would work without but this is faster)
+        if(buf[0] == '\n')
+            continue;
+
+        // figures out what the read line is setting
+        if(strstr(buf, "LOCAL_NET") != NULL)
         {
-            if(strstr(buf, "LOCAL_NET") != NULL)
-            {
-                // used to set our ip address
-                unsigned int ipAddr[4];
-                // starts the tokenizer on buffer (we don't care about return)
-                strtok(buf, " ");
-                // parses out the ipAddress
-                parse_remainder_of_string_for_ip(ipAddr);
-                // sets the localIpAddr in the configuration structure
-                fltCfg->localIpAddr = ConvertIpUIntOctetsToUInt(ipAddr);
-                // extracts the subnet mask and sets it in the filter configuration
-                fltCfg->localMask = extractLocalMask();
-                // configuratio is now valid
-                validConfig = true;
-                // continues to the next iteration
-                continue;
-            }
-            if(strstr(buf, "BLOCK_INBOUND_TCP_PORT") != NULL)
-            {
-                // add the tcp port to the list of blocked ones
-                unsigned int port = 0;
-                /* moves to where the number should begin (space after the colon)
-                   and converts it to an unsigned integer */
-                sscanf(strstr(buf, " ")+1, "%u", &port);
-                // adds the port to the list of blocked ports
-                add_blocked_inbound_tcp_port(fltCfg, port);
-                // continues to the next iteration
-                continue;
-            }
-            if(strstr(buf, "BLOCK_IP_ADDR") != NULL)
-            {
-                // house where the ip address will go
-                unsigned int ipAddr[4];
-                // starts the tokenizer on buffer (we don't care about return)
-                strtok(buf, " ");
-                // parses the remainder of the string for the IP
-                parse_remainder_of_string_for_ip(ipAddr);
-                // adds the ip address to the list of blocked ips
-                add_blocked_ip_address(fltCfg, ConvertIpUIntOctetsToUInt(ipAddr));
-                // continues to the next iteration
-                continue;
-            }
-            if(strstr(buf, "BLOCK_PING_REQ") != NULL)
-            {
-                // sets true to block inbound echo requests
-                fltCfg->blockInboundEchoReq = true;
-                // no continue statement here because it's the end of the stack
-            }
+            // used to set our ip address
+            unsigned int ipAddr[4];
+            // starts the tokenizer on buffer (we don't care about return)
+            strtok(buf, " ");
+            // parses out the ipAddress
+            parse_remainder_of_string_for_ip(ipAddr);
+            // sets the localIpAddr in the configuration structure
+            fltCfg->localIpAddr = ConvertIpUIntOctetsToUInt(ipAddr);
+            // extracts the subnet mask and sets it in the filter configuration
+            fltCfg->localMask = extractLocalMask();
+            // configuratio is now valid
+            validConfig = true;
+            // continues to the next iteration
+            continue;
+        }
+        if(strstr(buf, "BLOCK_INBOUND_TCP_PORT") != NULL)
+        {
+            // add the tcp port to the list of blocked ones
+            unsigned int port = 0;
+            /* moves to where the number should begin (space after the colon)
+               and converts it to an unsigned integer */
+            sscanf(strstr(buf, " ")+1, "%u", &port);
+            // adds the port to the list of blocked ports
+            add_blocked_inbound_tcp_port(fltCfg, port);
+            // continues to the next iteration
+            continue;
+        }
+        if(strstr(buf, "BLOCK_IP_ADDR") != NULL)
+        {
+            // house where the ip address will go
+            unsigned int ipAddr[4];
+            // starts the tokenizer on buffer (we don't care about return)
+            strtok(buf, " ");
+            // parses the remainder of the string for the IP
+            parse_remainder_of_string_for_ip(ipAddr);
+            // adds the ip address to the list of blocked ips
+            add_blocked_ip_address(fltCfg, ConvertIpUIntOctetsToUInt(ipAddr));
+            // continues to the next iteration
+            continue;
+        }
+        if(strstr(buf, "BLOCK_PING_REQ") != NULL)
+        {
+            // sets true to block inbound echo requests
+            fltCfg->blockInboundEchoReq = true;
+            // no continue statement here because it's the end of the stack
+            continue;
         }
     }
 
-    // closes the file before we exit (saves memory)
+    // closes the file before we exit (removes heap memory usage)
     fclose(pFile);
 
     if(validConfig == false)
-        fputs("ERROR: configuration file must set LOCAL_NET\n", stderr);
+        fprintf(stderr, "ERROR: configuration file must set LOCAL_NET\n");
 
     // returns true if valid false if no LOCAL_NET was set in the config file
     return validConfig;

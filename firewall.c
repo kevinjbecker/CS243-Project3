@@ -250,6 +250,9 @@ static void * filter_thread(void* args)
         }
     }
 
+    // sets not cancelled to false so main knows we are attempting to abort
+    NOT_CANCELLED = false;
+
     // end of thread is never reached when there is a cancellation.
     puts("fw: thread is deleting filter data.");
     tsd_destroy((void *)spec_p);
@@ -260,9 +263,6 @@ static void * filter_thread(void* args)
 
     // print that the thread is about to return
     printf("fw: thread returning. status: %d\n", status);
-
-    // sets not cancelled right before finish
-    NOT_CANCELLED = false;
     pthread_exit(&status);
 }
 
