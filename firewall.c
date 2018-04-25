@@ -286,9 +286,8 @@ static void display_menu(void)
 /// @return EXIT_SUCCESS or EXIT_FAILURE
 int main(int argc, char* argv[])
 {
-    return EXIT_SUCCESS;
     int command;
-    bool done = false, startFilterThread = false;
+    bool done = false;
 
     // print usage message if no arguments
     if(argc < 2)
@@ -306,23 +305,31 @@ int main(int argc, char* argv[])
     fw_spec.out_file = "FromFirewall";
     // creates and configures the filter
     fw_spec.filter = create_filter();
-    startFilterThread = configure_filter(fw_spec.filter, fw_spec.config_file) &&
-                        open_pipes(&fw_spec);
+    if(!configure_filter(fw_spec.filter, fw_spec.config_file))
+    {
+        // filter config was bad, need to teardown and exit
+        destroy_filter(fw_spec.filter);
+        return EXIT_FAILURE;
+    }
+
+    if(!open_pipes(&fw_spec))
+    {
+        // pipe opening was wrong, need to teardown and exit
+        destroy_filter(fw_spec.filter);
+        close_pipes(&fw_spec.pipes);
+        return EXIT_FAILURE;
+    }
+
     // prints that we are going to start the listener thread
     puts("fw: starting filter thread.");
-
-    // if we are able to start the thread we do it here
-    if(startFilterThread)
-    {
-        // creates a pthread key
-        pthread_key_create(&tsd_key, tsd_destroy);
-        // starts the filter thread
-        pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
-    }
+    // creates a pthread key
+    pthread_key_create(&tsd_key, tsd_destroy);
+    // starts the filter thread
+    pthread_create(&tid_filter, NULL, filter_thread, (void *)&fw_spec);
 
     // display the menu now
     display_menu();
-    // keeps looping until the user says it needs to stop
+    // keeps looping until the told it needs to stop
     while(!done)
     {
         // attempts to read in user input, only continues inward if 1 command
