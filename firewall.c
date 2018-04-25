@@ -140,6 +140,7 @@ void tsd_destroy(void * tsd_data) {
     close_pipes(&fw_spec->pipes);
 }
 
+
 /// signal handler passes signal information to the subordinate thread so
 /// that the thread can gracefully terminate and clean up.
 /// @param signum signal that was received by the main thread.
